@@ -1,3 +1,4 @@
+'''
 import socket
 from _thread import *
 from client import Client
@@ -65,3 +66,45 @@ while True:
 
 c.close()
 server_socket.close()
+'''
+
+import asyncio
+import websockets
+import json
+from client import Client
+
+clients = []
+
+async def consumer(websocket, path):
+    person = Client(websocket, path)
+    print('[CONNECTION] Connect with', websocket.remote_address)
+    async for message in websocket:
+        try:
+            new_msg = json.loads(message)
+            print(new_msg)
+            if new_msg.get('id') :
+                person.setId(new_msg['id'])
+                person.setUsername(new_msg['username'])
+                clients.append(person)
+
+            elif new_msg.get('message') :
+                for socket in clients:
+                    if socket.getUsername() == new_msg['dest']:
+                        new_msg["username"] = person.getUsername()
+                        await socket.getConn().send(json.dumps(new_msg))
+
+            elif new_msg.get('quit'):
+                if new_msg['quit'] == 'disconnect':
+                    break
+
+        except Exception as e:
+            print("[ERROR] :",e)
+            break
+
+    print("[CLOSE] Connection",person.getConn().remote_address,"close")
+    clients.remove(person)
+
+server = websockets.serve(consumer, '127.0.0.1',5575)
+
+asyncio.get_event_loop().run_until_complete(server)
+asyncio.get_event_loop().run_forever()

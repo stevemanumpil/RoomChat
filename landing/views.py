@@ -8,7 +8,7 @@ def index(request):
     context = {
         'title': 'Login'
     }
-    return render(request, 'login.html', context)
+    return render(request, 'landing/login.html', context)
 
 
 def check(request):
@@ -16,7 +16,7 @@ def check(request):
     password = request.POST['password']
     user = authenticate(username=username, password=password)
 
-    if user is not None:
+    if user is not None and user.is_superuser is not True:
         login(request, user)
         return redirect('/home')
 
@@ -27,7 +27,7 @@ def register(request):
     context = {
         'title': 'Register'
     }
-    return render(request, 'register.html', context)
+    return render(request, 'landing/register.html', context)
 
 
 def save(request):
