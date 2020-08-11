@@ -1,34 +1,10 @@
 {% extends "dashboard/include/base.html" %}
 
 {% block chat_panel%}
-    {% if username is None%}
-        <div class="jumbotron jumbotron-fluid align-items-center" style="margin-top: 5cm">
-            <div class="container">
-                <h1 class="display-4">Gihon Private Room</h1>
-                <p class="lead">This is a modified jumbotron that occupies the entire horizontal space of its parent.</p>
-            </div>
+    <div class="jumbotron jumbotron-fluid align-items-center" style="margin-top: 5cm">
+        <div class="container">
+            <h1 class="display-4">Gihon Private Room</h1>
+            <p class="lead">This is a modified jumbotron that occupies the entire horizontal space of its parent.</p>
         </div>
-    {% else %}
-        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap pt-3 pb-2 mb-3 border-bottom">
-            <div>
-                <img src="https://winaero.com/blog/wp-content/uploads/2019/11/Photos-new-icon.png" class="rounded-circle" width="50" height="50">
-                <span class="font-weight-bold ml-2">{{username}}</span>
-            </div>
-            <div class="btn-toolbar mt-2 mb-md-0">
-                <i class="fas fa-video fa-2x mr-2 text-secondary"></i>
-            </div>
-        </div>
-        <div id="chat-field"style="overflow: scroll; height: 13.3cm;">
-
-        </div>
-        <div class="form-row mt-2">
-            <div class="form-group col-11">
-                {% csrf_token %}
-                <input type="text" id="chat" class="form-control">
-            </div>
-            <div class="form-group col-1">
-                <button class="btn btn-light btn-block" id="send"><i class="fas fa-paper-plane"></i></button>
-            </div>
-        </div>
-    {% endif %}
+    </div>
 {% endblock chat_panel %}

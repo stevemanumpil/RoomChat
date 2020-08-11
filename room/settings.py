@@ -69,9 +69,9 @@ TEMPLATES = [
     },
 ]
 
+AUTH_USER_MODEL = 'landing.Account'
+
 WSGI_APPLICATION = 'room.wsgi.application'
-
-
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases

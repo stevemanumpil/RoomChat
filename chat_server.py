@@ -90,7 +90,7 @@ async def consumer(websocket, path):
             elif new_msg.get('message') :
                 for socket in clients:
                     if socket.getUsername() == new_msg['dest']:
-                        new_msg["username"] = person.getUsername()
+                        new_msg["sender"] = person.getUsername()
                         await socket.getConn().send(json.dumps(new_msg))
 
             elif new_msg.get('quit'):

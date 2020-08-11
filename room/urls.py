@@ -8,4 +8,6 @@ urlpatterns = [
     path('auth/', include('landing.urls')),
     path('home/', include('dashboard.urls')),
     path('admin/', admin.site.urls),
+    path('setup/', views.setup_meet),
+    path('room/<str:room_id>', views.MeetView.as_view(), name='join-room'),
 ]

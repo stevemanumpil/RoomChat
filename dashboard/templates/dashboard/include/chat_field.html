@@ -1,18 +1,34 @@
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap pt-3 pb-2 mb-3 border-bottom">
+<!-- <div class="d-flex pt-3 pb-2 mb-3 border-bottom">
     <div>
         <img src="https://winaero.com/blog/wp-content/uploads/2019/11/Photos-new-icon.png" class="rounded-circle" width="50" height="50">
-        <span class="font-weight-bold ml-2">{{username}}</span>
+        <div class="font-weight-bold ml-2">
+            {{name}}
+            <div>tst,tst</div>
+        </div>
     </div>
     <div class="btn-toolbar mt-2 mb-md-0">
         <i class="fas fa-video fa-2x mr-2 text-secondary"></i>
     </div>
+</div> -->
+<div class="d-flex mb-3 border-bottom">
+    <div class="row p-2 mr-auto">
+        <img src="https://winaero.com/blog/wp-content/uploads/2019/11/Photos-new-icon.png" class="rounded-circle" width="50" height="50">
+        <div class="font-weight-bold ml-2 p-1">
+            {{name}}<br>
+            <span id="member">{{member}}</span>
+        </div>
+    </div>
+    <div class="btn-toolbar my-auto">
+        <i class="fas fa-video fa-2x mr-2 text-secondary"></i>
+    </div>
 </div>
+
 <div id="chat-field"style="overflow: scroll; height: 13.3cm;">
 </div>
 <div class="form-row mt-2">
     <div class="form-group col-11">
         {% csrf_token %}
-        <input id="user-name" type="hidden" value="{{username}}">
+        <input id="user-name" type="hidden" value="{{name}}" data-category="{{category}}">
         <input type="text" id="chat" class="form-control">
     </div>
     <div class="form-group col-1">

@@ -1,49 +1,68 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
-
+from django.views import View
+from landing.models import Account
+from .forms import LoginForm, AccountCreationForm
+from django.forms import ValidationError
+from django.contrib import messages
 
 # Create your views here.
-def index(request):
-    context = {
-        'title': 'Login'
-    }
-    return render(request, 'landing/login.html', context)
+class LoginView(View):
 
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('/home')
 
-def check(request):
-    username = request.POST['username']
-    password = request.POST['password']
-    user = authenticate(username=username, password=password)
+        login_form = LoginForm()
+        context = {
+            'title' : 'Login',
+            'login_form' : login_form
+        }
+        return render(request,'landing/login.html',context)
 
-    if user is not None and user.is_superuser is not True:
-        login(request, user)
-        return redirect('/home')
+    def post(self, request, *args, **kwargs):
+        login_form = LoginForm(request.POST)
+        if login_form.is_valid():
+            email = login_form.cleaned_data.get('email')
+            password = login_form.cleaned_data.get('password')
 
-    return redirect('/auth/')
+            user = authenticate(email=email, password=password)
+            if user is not None and user.is_admin is not True:
+                login(request, user)
+                return redirect('/home')
+            
+            messages.error(request, 'Invalid email or password')
+        else:
+            raise ValidationError(login_form.errors)
 
+        return redirect('/auth/login')
 
-def register(request):
-    context = {
-        'title': 'Register'
-    }
-    return render(request, 'landing/register.html', context)
+class RegisterView(View):
 
+    def get(self, request):
+        if request.user.is_authenticated:
+            return redirect('/home')
 
-def save(request):
-    pas1 = request.POST.get('password')
-    pas2 = request.POST.get('conf_password')
+        register_form = AccountCreationForm()
 
-    if request.method == 'POST' and pas1 == pas2:
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
-        email = request.POST.get("email")
-        password = request.POST.get('password')
+        context = {
+            'title' : 'Register',
+            'register_form' : register_form
+        }
 
-        user = User.objects.create_user(first_name, email, password)
-        user.first_name = first_name
-        user.last_name = last_name
-        user.save()
-        return redirect('/auth/')
+        return render(request, 'landing/register.html', context)
 
-    return redirect('/')
+    def post(self, request):
+        register_form = AccountCreationForm(request.POST)
+
+        if register_form.is_valid():
+            register_form.save()
+            messages.success(request, 'Account Successfully created')
+            return redirect('/auth')
+
+        context = {
+            'title' : 'Register',
+            'register_form' : register_form
+        }
+        return render(request, 'landing/register.html', context)

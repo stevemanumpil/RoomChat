@@ -1,24 +1,24 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse, Http404
 from django.contrib.auth import logout
-from django.contrib.auth.models import User
+from landing.models import Account
 from django.template import loader
-from django.db.models import Q
 from django.views import View
-from .models import Message, PersonalChat
+from django.db.models import Q, F
+from .models import *
 from django.core.exceptions import ObjectDoesNotExist
 import json
-from datetime import datetime
 
 # Create your views here.
 def index(request):
     if request.user.is_authenticated:
         context = {
             'title':'Dashboard',
-            'users': User.objects.filter(~Q(username=request.user.username))
+            'chats': Room.objects.filter(participant__username=request.user.username),
+            'contact' : Account.objects.exclude(username__in=['admin',request.user.username])
         }
-        return render(request, 'dashboard/test.html', context)
-
+        return render(request, 'dashboard/include/base.html', context)
+        
     return redirect('/auth')
 
 def chat_field(request, username):
@@ -43,8 +43,14 @@ def req(request, user_id):
 
     raise Http404("gak ada")
 
-def store(request):
-    return HttpResponse(JsonResponse(request, safe=False))
+def check(request):
+    resp = json.loads(request.body)
+    
+    if Room.objects.filter(participant__username=request.user.username, tipe='Pr').get(participant__username=resp['dest']):
+        data = json.dumps({'response':'exist'})
+    
+    
+    return HttpResponse(data)
 
 def Logout(request):
     logout(request)
@@ -54,21 +60,37 @@ class StoreView(View):
 
     def get(self, request, *args, **kwargs):
         try:
-            dest = User.objects.get(username=kwargs['username'])
-            pc_id = PersonalChat.objects.get(Q(user1__in=[request.user,dest]) & Q(user2__in=[dest, request.user])).id
-            messages = list(Message.objects.filter(pc_id=pc_id).values('user_id','text'))
+            room = Room.objects.get(name=kwargs['name'])
+
+            messages = list(Message.objects.filter(room=room).values('sender','text'))
+            participant = list(room.participant.exclude(username=request.user.username).values('username'))
+
             for prop in messages:
-                if prop['user_id'] == request.user.id:
+                if prop['sender'] == request.user.id:
                     prop['position'] = 'end'
                     prop['user'] = request.user.username
                 else:
                     prop['position'] = 'start'
-                    prop['user'] = kwargs['username']
+                    prop['user'] = room.participant.get(pk=prop['sender']).username
 
-                prop.pop("user_id")
+                prop.pop('sender')
 
-            data = json.dumps({'response': messages})
+            data = json.dumps({'response': messages, 'participant':participant})
+            # pc_id = PersonalChat.objects.get(Q(user1__in=[request.user,dest]) & Q(user2__in=[dest, request.user]))
+            # messages = list(Message.objects.filter(pc_id=pc_id).values('user_id','text'))
+            # for prop in messages:
+            #     if prop['user_id'] == request.user.id:
+            #         prop['position'] = 'end'
+            #         prop['user'] = request.user.username
+            #     else:
+            #         prop['position'] = 'start'
+            #         prop['user'] = User.objects.get(pk=prop['user_id']).username
+
+            #     prop.pop("user_id")
+
+            # data = json.dumps({'response': messages})
             return HttpResponse(data)
+
         except ObjectDoesNotExist:
             data = json.dumps({'response':'object does not exist'})
             return HttpResponse(data)
@@ -76,17 +98,35 @@ class StoreView(View):
     def post(self, request):
 
         resp = json.loads(request.body)
-        dest = User.objects.get(username=resp['dest'])
-        pc_id = list(PersonalChat.objects.filter(Q(user1__in=[request.user,dest]) & Q(user2__in=[dest,request.user])))
+        room = Room.objects.get(name=resp['dest'])
+        
+        message = Message()
+        message.room = room
+        message.sender = request.user
+        message.text = resp['msg']
 
-        if pc_id:
-            self.store(pc_id[0], resp, request.user)
-        else:
-            pc = PersonalChat()
-            pc.user1 = request.user
-            pc.user2 = dest
-            pc.save()
-            self.store(pc, resp, request.user)
+        message.save()
+        
+        # if resp['cat'] == 'User':
+        #     dest = User.objects.get(username=resp['dest'])
+        #     pc_id = list(PersonalChat.objects.filter(Q(user1__in=[request.user,dest]) & Q(user2__in=[dest,request.user])))
+
+        #     if pc_id:
+        #         self.store(pc_id[0], resp, request.user)
+        #     else:
+        #         pc = PersonalChat()
+        #         pc.user1 = request.user
+        #         pc.user2 = dest
+        #         pc.save()
+        #         self.store(pc, resp, request.user)
+        
+        # elif resp['cat'] == 'Group':
+        #     dest = Group.objects.get(group_name=resp['dest'])
+        #     message = Message()
+        #     message.user_id = request.user
+        #     message.text = resp['msg']
+        #     message.group_id = dest
+        #     message.save()
 
         return HttpResponse(JsonResponse(resp, safe=False))
 
@@ -94,14 +134,5 @@ class StoreView(View):
         message = Message()
         message.user_id = user
         message.text = resp["msg"]
-        message.date_send = datetime.now()
         message.pc_id = pc
         message.save()
-
-
-class PanelView(View):
-
-    def get(self, request, *args, **kwargs):
-        user = User.objects.get(username=kwargs['username'])
-        template = loader.get_template('dashboard/include/chat_field.html')
-        return HttpResponse(template.render({'username':user.first_name}, request))

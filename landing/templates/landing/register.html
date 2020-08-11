@@ -27,28 +27,17 @@
                             <div class="line"></div>
                             <div class="line"></div>
                         </div>
-                        <form action="/auth/save/" method="post">
+                        <form method="post">
                             {% csrf_token %}
-                            <div class="row px-3">
-                                <label class="mb-1"><h6 class="mb-0 text-sm">First Name</h6></label>
-                                <input class="mb-4" type="text" name="first_name" placeholder="Enter a valid name">
-                            </div>
-                            <div class="row px-3">
-                                <label class="mb-1"><h6 class="mb-0 text-sm">Last Name</h6></label>
-                                <input class="mb-4" type="text" name="last_name" placeholder="Enter a valid name">
-                            </div>
-                            <div class="row px-3">
-                                <label class="mb-1"><h6 class="mb-0 text-sm">Email Address</h6>
-                                </label> <input class="mb-4" type="email" name="email" placeholder="Enter a valid email address">
-                            </div>
-                            <div class="row px-3"> <label class="mb-1">
-                                <h6 class="mb-0 text-sm">Password</h6>
-                                </label> <input type="password" name="password" placeholder="Enter password">
-                            </div>
-                            <div class="row px-3"> <label class="mb-1">
-                                <h6 class="mb-0 text-sm">Confirmation Password</h6>
-                                </label> <input type="password" name="conf_password" placeholder="Enter Confirmation password">
-                            </div>
+                                {% for form in register_form %}
+                                {% if form.errors %}
+                                    <span class="text-danger">{{form.errors}}</span>
+                                {% endif %}
+                                <div class="row px-3">
+                                    <label class="mb-1"><h6 class="mb-0 text-sm">{{form.label}}</h6></label>
+                                    {{form}}
+                                </div>
+                                {% endfor %}
                             <div class="row mb-3 px-3"> <button type="submit" class="btn btn-blue text-center">Register</button></div>
                             <div class="row mb-4 px-3"> <small class="font-weight-bold">Already have account? <a href="/auth" class="text-danger ">Sign in</a></small> </div>
                         </form>
